@@ -35,6 +35,16 @@ if ( !defined( 'ABSPATH' ) ) {
  ****************************************************************************
  */
 
+
+ add_action('admin_init', 'tkwps_redirect');
+
+ function tkwps_redirect() {
+     if (get_option('tkwps_do_activation_redirect', false)) {
+         delete_option('tkwps_do_activation_redirect');
+         wp_redirect( admin_url( '/options-general.php?page=my-setting-admin' ) );
+     }
+ }
+
 if ( !class_exists( 'TKWPS' ) ) {
     /**
      * Class TKWPS
@@ -66,7 +76,7 @@ if ( !class_exists( 'TKWPS' ) ) {
                 1
             );
 
-            //require_once TKWPS_INCLUDES_PATH . '/form/form-assets.php';
+            require_once TKWPS_INCLUDES_PATH . 'solution-settings-page.php';
 
             register_deactivation_hook( __FILE__, array( $this, 'plugin_deactivation' ) );
         }
@@ -135,7 +145,7 @@ if ( !class_exists( 'TKWPS' ) ) {
          */
         public function init_hook()
         {
-            $this->set_globals();
+
             do_action( 'TKWPS_init' );
 
         }
@@ -146,7 +156,9 @@ if ( !class_exists( 'TKWPS' ) ) {
          */
         function plugin_activation()
         {
-          exit( wp_redirect( admin_url( 'options-general.php?page=tkwps_settings' ) ) );
+          //exit( wp_redirect( admin_url( '/options-general.php?page=my-setting-admin' ) ) );
+
+          add_option('tkwps_do_activation_redirect', true);
         }
     }
 }
