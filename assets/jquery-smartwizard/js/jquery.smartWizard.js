@@ -45,7 +45,7 @@
         theme: 'default', // theme for the wizard, related css need to include for other than default theme
         justified: true, // Nav menu justification. true/false
         darkMode:false, // Enable/disable Dark Mode if the theme supports. true/false
-        autoAdjustHeight: true, // Automatically adjust content height
+        autoAdjustHeight: false, // Automatically adjust content height
         cycleSteps: false, // Allows to cycle the navigation of steps
         backButtonSupport: true, // Enable the back button support
         enableURLhash: true, // Enable selection of the step based on url hash
@@ -57,8 +57,8 @@
         toolbarSettings: {
             toolbarPosition: 'bottom', // none, top, bottom, both
             toolbarButtonPosition: 'right', // left, right, center
-            showNextButton: true, // show/hide a Next button
-            showPreviousButton: true, // show/hide a Previous button
+            showNextButton: false, // show/hide a Next button
+            showPreviousButton: false, // show/hide a Previous button
             toolbarExtraButtons: [] // Extra buttons to show on toolbar, array of jQuery input/buttons elements
         },
         anchorSettings: {
@@ -70,7 +70,7 @@
             enableAnchorOnDoneStep: true // Enable/Disable the done steps navigation
         },
         keyboardSettings: {
-            keyNavigation: true, // Enable/Disable keyboard navigation(left and right keys are used if enabled)
+            keyNavigation: false, // Enable/Disable keyboard navigation(left and right keys are used if enabled)
             keyLeft: [37], // Left key code
             keyRight: [39] // Right key code
         },

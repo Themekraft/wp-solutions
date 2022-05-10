@@ -45,48 +45,149 @@ class MySettingsPage
 
 
 <script>
-jQuery(document).ready(function(){
-  // Smart Wizard
-  jQuery('#smartwizard').smartWizard({
-    onFinish:onFinishCallback
-  });
+jQuery(document).ready(function()
+{
 
-  function onFinishCallback(objs, context){
-    if(validateAllSteps()){
-      jQuery('#wizzard-form').submit(function(event){
-        event.preventDefault();
+    // Smart Wizard
+    jQuery('#smartwizard').smartWizard();
+    var ajax_url = '<?php echo admin_url( 'admin-ajax.php' );?>';     
 
-        var data = {
-          'action': 'my_wizzard_ajax',
-          // form data
-        };
+    jQuery(document).on("click", '#validate',  function(event)
+    {            
+       
+            var license_number = jQuery('#wiz_license_number').val();
+            var bundle_id      = jQuery('#wiz_bundle_id').val();
 
-        jQuery.post(ajax_object.ajax_url, data, function(response) {
-            alert('You are a wizzard ' + response);
+            if(license_number == '' && bundle_id == '')
+            {
+                jQuery('.license-error').show();
+                jQuery('.bundle-error').show();
+            }
+            else if(license_number == '')
+            {
+                jQuery('.license-error').show();
+            }
+            else if(bundle_id == '')
+            {
+                jQuery('.bundle-error').show();
+            }
+            else
+            {     
+               
+                jQuery('.loader').show();
+                jQuery('.license-error').hide();
+                jQuery('.bundle-error').hide(); 
+                jQuery('.invalid-error').hide();                         
+                jQuery.ajax({
+                url : ajax_url,
+                data : {action: "my_wizzard_ajax", license : license_number, bundle_id: bundle_id},
+                beforeSend: function() 
+                {
+                    jQuery('.loader').show();   
+                },
+                success: function(response) 
+                {
+        
+                    if(response.data.message == 'failed')
+                    {
+                        jQuery('.loader').hide();   
+                        jQuery(".invalid-error").show();
+                    }
+                    else
+                    {
+                        jQuery('.loader').hide();   
+                        jQuery('.license-success').show();
+                        setTimeout(function () 
+                        {
+                            jQuery('#smartwizard').smartWizard("goToStep", 1);
+                        }, 2000);
+                    }
+                 }
+                });   
+            } 
+        
+    });
+
+    jQuery(document).on("click", '#go-step-one',  function(event)
+    { 
+        jQuery('#smartwizard').smartWizard("goToStep", 0);
+    });
+
+    // Ajax content loading with "stepContent" event
+    jQuery("#smartwizard").on("stepContent", function(e, anchorObject, stepIndex, stepDirection) {
+        
+        var wizard_step = stepIndex;        
+        if(wizard_step == 1)
+        {
+            
+            jQuery('#smartwizard').smartWizard("loader", "show");
+            var data = 
+            {
+              'action'   : 'wgt_packageinfo_ajax'
+            };
+
+            jQuery.post(ajax_url, data, function(response) 
+            {
+                jQuery('.Plugin-data').empty();
+                jQuery('.Plugin-data').append(response.data.data);
+                jQuery('#smartwizard').smartWizard("loader", "hide");
+
+            }); 
+             
+        }
+
+    });
+    
+    jQuery(document).on("click", '#install-activate',  function(event)
+    { 
+
+        jQuery('#smartwizard').smartWizard("loader", "show");           
+        jQuery.ajax({
+        url : ajax_url,
+        async: false, 
+        data : {action: "wgt_install_ajax"},
+        beforeSend: function() {
+            jQuery('#smartwizard').smartWizard("loader", "show");
+        },
+        success: function(response) 
+        {
+            if(response.data.message == 'failed')
+            {
+                jQuery('#smartwizard').smartWizard("loader", "hide");
+                jQuery(".plugin-invalid").show();
+            }
+            else
+            {
+                jQuery('#smartwizard').smartWizard("loader", "hide");
+                jQuery('.plugin-success').show();
+                setTimeout(function () 
+                {
+                    jQuery('#smartwizard').smartWizard("goToStep", 2);
+                }, 2000);
+            }
+        }
         });
-      });
-    }
-  }
+
+    });
+
+    jQuery(document).on("click", '#go-step-two',  function(event)
+    { 
+        jQuery('#smartwizard').smartWizard("goToStep", 1);
+    });
+
+    jQuery(document).on("click", '#go-step-four',  function(event)
+    { 
+        jQuery('#smartwizard').smartWizard("goToStep", 3);
+    });
+
+window.setTimeout(function(){
+    
+    tb_show("", "#TB_inline?height=280&width=620&inlineId=my-content-id", "");},300); 
 });
 </script>
 
-
-
-
-
-
-
-
-
-
-
 <?php add_thickbox(); ?>
 
-<script type="text/javascript">
-
-//TB_height = jQuery(window).height();
-
-</script>
 <div id="my-content-id" style="display:none;">
   <div id="smartwizard">
       <ul class="nav">
@@ -113,24 +214,74 @@ jQuery(document).ready(function(){
       </ul>
 
       <div class="tab-content">
+
          <div id="step-1" class="tab-pane" role="tabpanel">
-            Step content
+           
+            <div class="key-validate-form">
+               
+                <div class="form-col">
+                    <input type="text" id="wiz_license_number" name="wiz_license_number" placeholder="Enter License Key" value="" />
+                    <span class="license-error" style="display: none;">Please Fill License Key.</span>
+                </div>
+
+                <div class="form-col">
+                    <input type="text" id="wiz_bundle_id" name="wiz_bundle_id" placeholder="Enter Bundle Id" value="" />
+                    <span class="bundle-error" style="display: none;">Please Fill Bundle ID.</span>
+                </div>
+                <span class="invalid-error" style="display: none;">Invalid License Key or Bundle ID.</span>
+                <span class="license-success" style="display: none;">License Verified Successfully.</span>
+
+                <img class="loader" style="display: none" src="<?php echo home_url(); ?>/wp-includes/js/tinymce/skins/lightgray/img/loader.gif">
+                <input type="button" id="validate" value="Next">
+            </div>
+
          </div>
+
          <div id="step-2" class="tab-pane" role="tabpanel">
-            Step content
+            <div class="Plugin-data">
+                <?php
+                echo '<h2>Your Package Includes Following Plugins : </h2>';
+                $plugin_names = get_option('wgt_plugin_name');
+
+                if(!empty($plugin_names))
+                {   
+                    echo '<ul>';
+                    foreach($plugin_names as $plugin_name)
+                    {
+                        echo '<li>'.$plugin_name['name'].'</li>';
+                    }
+                    echo '</ul>';
+                }
+                ?>
+            </div>
+
+            <span class="plugin-invalid" style="display: none;">Something is Wrong.Please try again.</span>
+            <span class="plugin-success" style="display: none;">Plugin Installed Successfully.</span>
+
+            <input type="button" id="go-step-one" value="Back">
+            <input type="button" id="install-activate" value="Next">
          </div>
+
          <div id="step-3" class="tab-pane" role="tabpanel">
-            Step content
+            <h2>Documentation</h2>
+            <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim.</p>
+            <input type="button" id="go-step-two" value="Back">
+            <input type="button" id="go-step-four" value="Next">
          </div>
+
          <div id="step-4" class="tab-pane" role="tabpanel">
-            Step content
+            <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim.</p>
+            <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim.</p>
          </div>
+
       </div>
+
   </div>
 </div>
 
 <a href="#TB_inline?&inlineId=my-content-id" class="thickbox">View my inline content!</a>
 ---
+
 
 
             <form method="post" action="options.php">
@@ -154,7 +305,7 @@ jQuery(document).ready(function(){
             'my_option_group', // Option group
             'my_option_name', // Option name
             array( $this, 'sanitize' ) // Sanitize
-        );
+        );        
 
         add_settings_section(
             'setting_section_id', // ID
@@ -164,20 +315,64 @@ jQuery(document).ready(function(){
         );
 
         add_settings_field(
-            'id_number', // ID
-            'ID Number', // Title
-            array( $this, 'id_number_callback' ), // Callback
+            'license_number', // ID
+            'License Key', // Title
+            array( $this, 'license_number_callback' ), // Callback
             'my-setting-admin', // Page
             'setting_section_id' // Section
         );
 
         add_settings_field(
-            'title',
-            'Title',
-            array( $this, 'title_callback' ),
+            'bundle_id',
+            'Bundle ID',
+            array( $this, 'bundle_id_callback' ),
             'my-setting-admin',
             'setting_section_id'
         );
+
+
+        if (isset($_GET['settings-updated']))
+        {
+            $wgt_keys = get_option( 'my_option_name');
+            if(!empty($wgt_keys))
+            {
+                
+                $names = get_option('wgt_plugin_name');
+
+                WP_Filesystem();
+
+                if ( ! function_exists( 'get_plugins' ) ) 
+                {
+                    require_once ABSPATH . 'wp-admin/includes/plugin.php';
+                    include_once (ABSPATH . 'wp-admin/includes/file.php');
+                }
+
+                $new_names = array();
+                foreach($names as $name)
+                {
+                    $new_names[] = $name['slug'];
+                }
+
+                $all_plugins = get_plugins();
+
+                foreach($all_plugins as $key => $all_plugin)
+                {
+                    
+                    $plugin_handler = explode('/', $key);        
+                    if(in_array($plugin_handler[0], $new_names))
+                    {
+                        $result = activate_plugin( $key );
+                    }
+                    
+                }
+
+                $url = get_admin_url().'/plugins.php';
+                wp_redirect($url);
+                exit;    
+            }
+            
+        }
+
     }
 
     /**
@@ -187,14 +382,112 @@ jQuery(document).ready(function(){
      */
     public function sanitize( $input )
     {
+        if(isset($_POST['submit']))
+        {
         $new_input = array();
-        if( isset( $input['id_number'] ) )
-            $new_input['id_number'] = absint( $input['id_number'] );
+        if(empty($input['license_number']))
+        {
+            add_settings_error( 'my_option_notice', 'invalid_field_1', 'There' );
+        }
 
-        if( isset( $input['title'] ) )
-            $new_input['title'] = sanitize_text_field( $input['title'] );
+        if(empty($input['bundle_id']))
+        {
+            add_settings_error( 'my_option_notice', 'invalid_field_1', 'There 45' );
+        }
+
+        if( !empty($input['license_number']) && !empty($input['bundle_id']) )
+        {
+           
+            $license_key = $input['license_number'];
+            $plugin_id   = $input['bundle_id'];
+            $api         = new Freemius_Apii(FS__API_SCOPE, FS__API_DEV_ID, FS__API_PUBLIC_KEY, FS__API_SECRET_KEY);
+            $licenses    = $api->Api("/plugins/{$plugin_id}/licenses.json?search=" . urlencode($license_key)); 
+            
+            if(isset($licenses->licenses))
+            {
+    
+                $is_valid_license_key = (1 === count($licenses->licenses));    
+            }
+            else
+            {
+               $is_valid_license_key =  '';
+            }
+            
+            
+            if($is_valid_license_key == 1 )
+            {
+                
+                $plan_data = $api->Api("/plugins/{$plugin_id}/plans.json");
+                $plugins   = $plan_data->plans[0]->plugin_plans;
+                $tgmpluginsFinal = array();
+                foreach ($plugins as $key => $value) 
+                {
+                   
+                    $plugin_tags_data = $api->Api("/plugins/{$key}/tags.json");
+                    $plugin_tag_id = $plugin_tags_data->tags[0]->id;
+
+                    $zip = $api->GetSignedUrl('plugins/'.$key.'/tags/'.$plugin_tag_id.'.zip?is_premium=true');
+                       
+                    $stream = stream_context_create(array( 
+                    "ssl"=>array(     
+                    "verify_peer"=> false,     
+                    "verify_peer_name"=> false, ),
+                    'http' => array(     
+                    'timeout' => 30     ) )     );
+
+                    $new_file_content = file_get_contents($zip, 0, $stream);
+                    $destination_path = trailingslashit( wp_upload_dir()['basedir'] ) . 'tkwps/';
+                    $destination      = $destination_path.$plugin_tags_data->tags[0]->premium_slug .".zip";
+                    $file             = fopen($destination, "w");
+                    fputs($file, $new_file_content);
+                    fclose($file);
+                   
+                    $tgmplugins           = array();
+                    $tgmplugins['name']   = $plugin_tags_data->tags[0]->premium_slug;
+                    $tgmplugins['slug']   = $plugin_tags_data->tags[0]->premium_slug;
+                    $tgmplugins['source'] = $destination;
+                    
+                    $tgmpluginsFinal[] = $tgmplugins;
+                }                
+                
+                update_option('wgt_plugin_name', $tgmpluginsFinal);
+                
+                $names = get_option('wgt_plugin_name');
+
+                WP_Filesystem();
+
+                if ( ! function_exists( 'get_plugins' ) ) 
+                {
+                    require_once ABSPATH . 'wp-admin/includes/plugin.php';
+                    include_once (ABSPATH . 'wp-admin/includes/file.php');
+                }
+
+                $new_names = array();
+                foreach($names as $name)
+                {
+                    $new_names[] = $name['slug'];
+                    $path    = WP_CONTENT_DIR.'/plugins/';
+                    WP_Filesystem();
+                    $unzipfile = unzip_file(  $name['source'], $path );
+                }
+
+                if( isset( $input['license_number'] ) )
+                $new_input['license_number'] = sanitize_text_field( $input['license_number'] );
+
+                if( isset( $input['bundle_id'] ) )
+                $new_input['bundle_id'] = sanitize_text_field( $input['bundle_id'] );
+               
+            }
+            else
+            {                
+                add_settings_error( 'my_option_name', 'Missing value error', 'Something is Wrong.' );           
+             
+            }
+            
+        }        
 
         return $new_input;
+        }
     }
 
     /**
@@ -208,23 +501,27 @@ jQuery(document).ready(function(){
     /**
      * Get the settings option array and print one of its values
      */
-    public function id_number_callback()
+    public function license_number_callback()
     {
+        
         printf(
-            '<input type="text" id="id_number" name="my_option_name[id_number]" value="%s" />',
-            isset( $this->options['id_number'] ) ? esc_attr( $this->options['id_number']) : ''
+            '<input type="text" id="license_number" name="my_option_name[license_number]" value="%s" />',
+            isset( $this->options['license_number'] ) ? esc_attr( $this->options['license_number']) : ''
         );
+        
     }
 
     /**
      * Get the settings option array and print one of its values
      */
-    public function title_callback()
+    public function bundle_id_callback()
     {
+        
         printf(
-            '<input type="text" id="title" name="my_option_name[title]" value="%s" />',
-            isset( $this->options['title'] ) ? esc_attr( $this->options['title']) : ''
+            '<input type="text" id="bundle_id" name="my_option_name[bundle_id]" value="%s" />',
+            isset( $this->options['bundle_id'] ) ? esc_attr( $this->options['bundle_id']) : ''
         );
+    
     }
 }
 
@@ -240,32 +537,166 @@ add_action( 'wp_ajax_my_wizzard_ajax', 'my_wizzard_ajax' );
 add_action( 'wp_ajax_nopriv_my_wizzard_ajax', 'my_wizzard_ajax' ); // if available to non logged-in users
 
 function my_wizzard_ajax() {
+  
+  $license   = $_REQUEST['license'];
+  $plugin_id = $_REQUEST['bundle_id'];
 
-  // nonce check
+  $api         = new Freemius_Apii(FS__API_SCOPE, FS__API_DEV_ID, FS__API_PUBLIC_KEY, FS__API_SECRET_KEY);
+  $licenses    = $api->Api("/plugins/{$plugin_id}/licenses.json?search=" . urlencode($license));
 
-  // capabilities check
+  if(isset($licenses->licenses))
+  {
+     $is_valid_license_key = (1 === count($licenses->licenses));    
+  }
+  else
+  {
+    $is_valid_license_key =  '';
+  }
 
-  // required data exists checks, get data from $_POST super global variable
+  if ( $is_valid_license_key == 1 ) 
+  {
 
-  if ( $all_good ) {
+    $plan_data = $api->Api("/plugins/{$plugin_id}/plans.json");
+    $plugins   = $plan_data->plans[0]->plugin_plans;
+    $tgmpluginsFinal = array();
+    foreach ($plugins as $key => $value) 
+    {
+       
+        $plugin_tags_data = $api->Api("/plugins/{$key}/tags.json");
+        $plugin_tag_id = $plugin_tags_data->tags[0]->id;
 
-    // do something
-    // wp_insert_post
-    // wp_update_post
-    // wp_update_meta
-    // wp_update_user
-    // update_user_meta
+        $zip = $api->GetSignedUrl('plugins/'.$key.'/tags/'.$plugin_tag_id.'.zip?is_premium=true');
 
-    wp_send_json_success( 'Harry' );
+           
+        $stream = stream_context_create(array( 
+        "ssl"=>array(     
+        "verify_peer"=> false,     
+        "verify_peer_name"=> false, ),
+        'http' => array(     
+        'timeout' => 30     ) )     );
 
-  } else {
+        $new_file_content = file_get_contents($zip, 0, $stream);
+        $destination_path = trailingslashit( wp_upload_dir()['basedir'] ) . 'tkwps/';
+        $destination      = $destination_path.$plugin_tags_data->tags[0]->premium_slug .".zip";
+        $file             = fopen($destination, "w");
+        fputs($file, $new_file_content);
+        fclose($file);
+       
+        $tgmplugins           = array();
+        $tgmplugins['name']   = $plugin_tags_data->tags[0]->premium_slug;
+        $tgmplugins['slug']   = $plugin_tags_data->tags[0]->premium_slug;
+        $tgmplugins['source'] = $destination;
+        
+        $tgmpluginsFinal[] = $tgmplugins;
+    }    
+    
+    update_option('wgt_plugin_name', $tgmpluginsFinal);
 
-    wp_send_json_error( 'Rincewind' );
+    $wc_license_options = array(
+    'license_number' => 'dgdfgfdg',
+    'bundle_id' => 'wewewewewe'
+    );
+    update_option('my_option_name', $wc_license_options);
+
+    $return = array(
+        'message' => __( 'Success')
+    );
+
+    wp_send_json_success( $return );
+
+  } 
+  else 
+  {
+
+    $return = array(
+        'message' => __( 'failed')
+    );
+    wp_send_json_error( $return );
 
   }
 
 }
 
+
+add_action( 'wp_ajax_wgt_install_ajax', 'wgt_install_ajax' );
+add_action( 'wp_ajax_nopriv_wgt_install_ajax', 'wgt_install_ajax' ); // if available to non logged-in users
+function wgt_install_ajax() 
+{
+
+    WP_Filesystem();
+
+    if ( ! function_exists( 'get_plugins' ) ) 
+    {
+        require_once ABSPATH . 'wp-admin/includes/plugin.php';
+        include_once (ABSPATH . 'wp-admin/includes/file.php');
+    }
+
+    $names = get_option('wgt_plugin_name');
+
+    if(empty($names))
+    {
+        $return = array(
+        'message' => __( 'Failed')
+        );
+    }
+    else
+    {
+        $new_names = array();
+        foreach($names as $name)
+        {
+            $new_names[] = $name['slug'];
+            $path    = WP_CONTENT_DIR.'/plugins/';
+            WP_Filesystem();
+            $unzipfile = unzip_file(  $name['source'], $path );
+        }
+
+        $all_plugins = get_plugins();
+
+        foreach($all_plugins as $key => $all_plugin)
+        {
+            
+            $plugin_handler = explode('/', $key);        
+            if(in_array($plugin_handler[0], $new_names))
+            {
+                $result = activate_plugin( $key );
+            }
+            
+        }
+        $return = array(
+        'message' => __( 'Success')
+        );
+    }    
+
+    wp_send_json_success( $return );   
+
+}
+
+add_action( 'wp_ajax_wgt_packageinfo_ajax', 'wgt_packageinfo_ajax' );
+add_action( 'wp_ajax_nopriv_wgt_packageinfo_ajax', 'wgt_packageinfo_ajax' ); // if available to non logged-in users
+function wgt_packageinfo_ajax() 
+{
+    
+    $package_data = '';
+    $package_data.='<h2>Your Package Includes Following Plugins : </h2>';
+    $plugin_names = get_option('wgt_plugin_name');
+
+    if(!empty($plugin_names))
+    {   
+        $package_data.= '<ul>';
+        foreach($plugin_names as $plugin_name)
+        {
+            $package_data.= '<li>'.$plugin_name['name'].'</li>';
+        }
+        $package_data.= '</ul>';
+    }
+    
+    $return = array(
+        'data' => $package_data
+    );
+
+    wp_send_json_success( $return );   
+
+}
 /**
  * Enqueue a script in the WordPress admin on edit.php.
  *
@@ -276,3 +707,7 @@ function wpdocs_selectively_enqueue_admin_script( $hook ) {
     wp_enqueue_style( 'jquery-smartwizard-', TKWPS_ASSETS . '/jquery-smartwizard/css/smart_wizard_all.css');
 }
 add_action( 'admin_init', 'wpdocs_selectively_enqueue_admin_script' );
+
+
+
+

@@ -1,5 +1,4 @@
 <?php
-
 if ( !defined( 'ABSPATH' ) ) {
     exit;
 }
@@ -35,10 +34,13 @@ if ( !defined( 'ABSPATH' ) ) {
  ****************************************************************************
  */
 
+require_once dirname(__FILE__) . '/freemius-php-sdk-master/freemius/Freemius.php';
 
- add_action('admin_init', 'tkwps_redirect');
+require_once dirname(__FILE__) . '/example.php';
 
- function tkwps_redirect() {
+add_action('admin_init', 'tkwps_redirect');
+
+function tkwps_redirect() {
      if (get_option('tkwps_do_activation_redirect', false)) {
          delete_option('tkwps_do_activation_redirect');
          wp_redirect( admin_url( '/options-general.php?page=my-setting-admin' ) );
@@ -131,6 +133,12 @@ if ( !class_exists( 'TKWPS' ) ) {
                  */
                 define( 'TKWPS_ASSETS', plugins_url( 'assets/', __FILE__ ) );
             }
+
+            define( 'FS__API_SCOPE', 'developer' );
+            define( 'FS__API_DEV_ID', 13700 );
+            define( 'FS__API_PUBLIC_KEY', 'pk_d6125cf2086c92d8c3e0f027b1cb8' );
+            define( 'FS__API_SECRET_KEY', 'sk_QfJceV^#Z+VlW)dEY]09oqtr<{x%X' );
+
         }
 
         /**
@@ -157,9 +165,22 @@ if ( !class_exists( 'TKWPS' ) ) {
         function plugin_activation()
         {
           //exit( wp_redirect( admin_url( '/options-general.php?page=my-setting-admin' ) ) );
-
+          $uploads_dir = trailingslashit( wp_upload_dir()['basedir'] ) . 'tkwps';
+          wp_mkdir_p( $uploads_dir );
           add_option('tkwps_do_activation_redirect', true);
         }
+
+         /**
+         * Plugin deactivation
+         * @since  0.1
+         */
+        function plugin_deactivation()
+        {
+          //exit( wp_redirect( admin_url( '/options-general.php?page=my-setting-admin' ) ) );
+
+          //add_option('tkwps_do_activation_redirect', true);
+        }
+
     }
 }
 
@@ -177,3 +198,5 @@ function activate_tkwps_at_plugin_loader()
 }
 
 activate_tkwps_at_plugin_loader();
+
+
