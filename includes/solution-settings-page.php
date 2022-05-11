@@ -216,15 +216,42 @@ window.setTimeout(function(){
       <div class="tab-content">
 
          <div id="step-1" class="tab-pane" role="tabpanel">
-           
+            <div class="form-col">
+                <p>
+                    <span>Themekraft Solution: </span>
+                <select id="select-solution">
+                    <?php
+                        $url='https://themekraft.com/tk-solutions.json';
+                        $ch = curl_init();
+                        $timeout = 10;
+                        curl_setopt( $ch, CURLOPT_URL, $url );
+                        curl_setopt( $ch, CURLOPT_RETURNTRANSFER, 1 );
+                        curl_setopt( $ch, CURLOPT_CONNECTTIMEOUT, $timeout );
+                        $data = curl_exec( $ch );
+                        $response_info = curl_getinfo( $ch );
+                        curl_close( $ch );
+                        if ( isset( $response_info['http_code'] ) && $response_info['http_code'] === 200 ) {
+                            $solutions = json_decode( $data, true );
+                            echo '<option value=" ">Please select</option>';
+                            foreach( $solutions as $solution ){
+                                $s_name = $solution['metadata']['freemius_name'][0];
+                                $s_id = $solution['metadata']['freemius_plugin_id'][0];
+                                $s_link = $solution['metadata']['freemius_bundle'][0];
+                                echo '<option data-bundle-id="' . $s_id . '" data-bundle-url="' . $s_link . '" value="' . str_replace( ' ', '-', strtolower( $s_name ) ) . '"> '. $s_name .'</option>';
+                            }
+                        }
+                    ?>
+                </select>
+                </p>
+            </div>
             <div class="key-validate-form">
                
-                <div class="form-col">
+                <div class="form-col solution-key">
                     <input type="text" id="wiz_license_number" name="wiz_license_number" placeholder="Enter License Key" value="" />
                     <span class="license-error" style="display: none;">Please Fill License Key.</span>
                 </div>
 
-                <div class="form-col">
+                <div class="form-col solution-key">
                     <input type="text" id="wiz_bundle_id" name="wiz_bundle_id" placeholder="Enter Bundle Id" value="" />
                     <span class="bundle-error" style="display: none;">Please Fill Bundle ID.</span>
                 </div>

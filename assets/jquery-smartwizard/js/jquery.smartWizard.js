@@ -891,3 +891,13 @@
         }
     };
 }));
+
+jQuery(function($) {
+    $('#select-solution').on('change', function() {
+        if($(this).val() == ' '){
+            $(".solution-key").css("display", "none");
+        } else{
+            $(".solution-key").css("display", "block");
+        }
+    });
+});

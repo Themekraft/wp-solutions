@@ -663,3 +663,7 @@
 .sw-theme-progress.sw-dark > .nav .nav-link.danger::after {
   background: #d9534f;
 }
+
+.solution-key{
+  display: none;
+}
