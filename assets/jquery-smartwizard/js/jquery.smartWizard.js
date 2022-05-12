@@ -892,12 +892,51 @@
     };
 }));
 
-jQuery(function($) {
+jQuery(function($) 
+{
+    $("#validate").hide();
+    $(".buy-info").hide();
     $('#select-solution').on('change', function() {
-        if($(this).val() == ' '){
+        if($(this).val() == ' ')
+        {
             $(".solution-key").css("display", "none");
-        } else{
+            $("#wiz_bundle_id").val();
+            $("#validate").hide();
+            $(".buy-info").hide();
+        }
+        else
+        {
             $(".solution-key").css("display", "block");
+            var bundle_id   = $(this).find(':selected').attr('data-bundle-id');
+            var bundle_link = $(this).find(':selected').attr('data-bundle-url');
+            var bundle_text = $(this).find(':selected').text();
+            $("#wiz_bundle_id").val(bundle_id);
+            $("#validate").show();
+            $(".bundle-link").attr("href", bundle_link);
+            $(".bundle-link").text(bundle_text);
+            $(".buy-info").show();
+
         }
     });
+
+    $('#tk-select-solution').on('change', function() {
+        if($(this).val() == ' ')
+        {            
+            $("#bundle_id").val();
+            $(".license-row").hide();
+            $(".bundle-row").hide();
+        }
+        else
+        {
+            $(".license-row").show();
+            var bundle_id   = $(this).find(':selected').attr('data-bundle-id');
+            var bundle_link = $(this).find(':selected').attr('data-bundle-url');
+            var bundle_text = $(this).find(':selected').text();
+            $("#bundle_id").val(bundle_id);
+            $(".buy-text .bundle-link").attr("href", bundle_link);
+            $(".buy-text .bundle-link").text(bundle_text);
+
+        }
+    });
+
 });

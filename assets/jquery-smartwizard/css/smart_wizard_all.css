@@ -667,3 +667,9 @@
 .solution-key{
   display: none;
 }
+
+tr.bundle-row,
+tr.license-row 
+{
+    display: none;
+}

@@ -54,11 +54,16 @@ jQuery(document).ready(function()
 
     jQuery(document).on("click", '#validate',  function(event)
     {            
-       
+            
             var license_number = jQuery('#wiz_license_number').val();
             var bundle_id      = jQuery('#wiz_bundle_id').val();
-
-            if(license_number == '' && bundle_id == '')
+            var plan           = jQuery( "#select-solution option:selected" ).val();
+            
+            if(plan == '' && plan == '')
+            {
+                jQuery('.solution-error').show();
+            }
+            else if(license_number == '' && bundle_id == '')
             {
                 jQuery('.license-error').show();
                 jQuery('.bundle-error').show();
@@ -77,7 +82,8 @@ jQuery(document).ready(function()
                 jQuery('.loader').show();
                 jQuery('.license-error').hide();
                 jQuery('.bundle-error').hide(); 
-                jQuery('.invalid-error').hide();                         
+                jQuery('.invalid-error').hide();  
+                jQuery('.solution-error').hide();                       
                 jQuery.ajax({
                 url : ajax_url,
                 data : {action: "my_wizzard_ajax", license : license_number, bundle_id: bundle_id},
@@ -242,6 +248,7 @@ window.setTimeout(function(){
                         }
                     ?>
                 </select>
+                <span class="solution-error" style="display: none;">Please Select Solution.</span>
                 </p>
             </div>
             <div class="key-validate-form">
@@ -252,14 +259,19 @@ window.setTimeout(function(){
                 </div>
 
                 <div class="form-col solution-key">
-                    <input type="text" id="wiz_bundle_id" name="wiz_bundle_id" placeholder="Enter Bundle Id" value="" />
+                    <input type="hidden" id="wiz_bundle_id" name="wiz_bundle_id" placeholder="Enter Bundle Id" value="" />
                     <span class="bundle-error" style="display: none;">Please Fill Bundle ID.</span>
                 </div>
-                <span class="invalid-error" style="display: none;">Invalid License Key or Bundle ID.</span>
+                <span class="invalid-error" style="display: none;">Invalid License Key.</span>
                 <span class="license-success" style="display: none;">License Verified Successfully.</span>
+
+                <div class="buy-info">
+                    <p><b>Not Purchased Yet?</b> Get a new license of this Solution here:<a class="bundle-link" href="#" target="blank"></a></p>
+                </div>
 
                 <img class="loader" style="display: none" src="<?php echo home_url(); ?>/wp-includes/js/tinymce/skins/lightgray/img/loader.gif">
                 <input type="button" id="validate" value="Next">
+                
             </div>
 
          </div>
@@ -342,11 +354,22 @@ window.setTimeout(function(){
         );
 
         add_settings_field(
+            'tk_solution', // ID
+            'Themekraft Solution', // Title
+            array( $this, 'tk_solution_callback' ), // Callback
+            'my-setting-admin', // Page
+            'setting_section_id' // Section
+        );
+
+        add_settings_field(
             'license_number', // ID
             'License Key', // Title
             array( $this, 'license_number_callback' ), // Callback
             'my-setting-admin', // Page
-            'setting_section_id' // Section
+            'setting_section_id', // Section
+            array(
+            'class'             => 'license-row',
+            ),
         );
 
         add_settings_field(
@@ -354,7 +377,10 @@ window.setTimeout(function(){
             'Bundle ID',
             array( $this, 'bundle_id_callback' ),
             'my-setting-admin',
-            'setting_section_id'
+            'setting_section_id',
+            array(
+            'class'             => 'bundle-row',
+            ),
         );
 
 
@@ -450,32 +476,62 @@ window.setTimeout(function(){
                 foreach ($plugins as $key => $value) 
                 {
                    
-                    $plugin_tags_data = $api->Api("/plugins/{$key}/tags.json");
-                    $plugin_tag_id = $plugin_tags_data->tags[0]->id;
+                    $plugin_tags_data   = $api->Api("/plugins/{$key}/tags.json");
+                    $plugin_tag_id      = $plugin_tags_data->tags[0]->id;
+                    $plugin_has_premium = $plugin_tags_data->tags[0]->has_premium;
+                    $tkplugin_id        = $plugin_tags_data->tags[0]->plugin_id; 
 
-                    $zip = $api->GetSignedUrl('plugins/'.$key.'/tags/'.$plugin_tag_id.'.zip?is_premium=true');
+                    if( !empty($plugin_tag_id) && empty($plugin_has_premium) )
+                    {
+                        $zip = $api->GetSignedUrl('plugins/'.$key.'/tags/'.$plugin_tag_id.'.zip?is_premium=false');
+                        
+                        $plugin_info = $api->Api("/plugins/{$tkplugin_id}.json");
+
+                        $stream = stream_context_create(array( 
+                        "ssl"=>array(     
+                        "verify_peer"=> false,     
+                        "verify_peer_name"=> false, ),
+                        'http' => array(     
+                        'timeout' => 30     ) )     );
+
+                        $new_file_content = file_get_contents($zip, 0, $stream);
+                        $destination_path = trailingslashit( wp_upload_dir()['basedir'] ) . 'tkwps/';
+                        $destination      = $destination_path.$plugin_info->slug .".zip";
+                        $file             = fopen($destination, "w");
+                        fputs($file, $new_file_content);
+                        fclose($file);
                        
-                    $stream = stream_context_create(array( 
-                    "ssl"=>array(     
-                    "verify_peer"=> false,     
-                    "verify_peer_name"=> false, ),
-                    'http' => array(     
-                    'timeout' => 30     ) )     );
+                        $tgmplugins           = array();
+                        $tgmplugins['name']   = $plugin_info->slug;
+                        $tgmplugins['slug']   = $plugin_info->slug;
+                        $tgmplugins['source'] = $destination;
+                    }
+                    else
+                    {
+                        $zip = $api->GetSignedUrl('plugins/'.$key.'/tags/'.$plugin_tag_id.'.zip?is_premium=true');
+                       
+                        $stream = stream_context_create(array( 
+                        "ssl"=>array(     
+                        "verify_peer"=> false,     
+                        "verify_peer_name"=> false, ),
+                        'http' => array(     
+                        'timeout' => 30     ) )     );
 
-                    $new_file_content = file_get_contents($zip, 0, $stream);
-                    $destination_path = trailingslashit( wp_upload_dir()['basedir'] ) . 'tkwps/';
-                    $destination      = $destination_path.$plugin_tags_data->tags[0]->premium_slug .".zip";
-                    $file             = fopen($destination, "w");
-                    fputs($file, $new_file_content);
-                    fclose($file);
-                   
-                    $tgmplugins           = array();
-                    $tgmplugins['name']   = $plugin_tags_data->tags[0]->premium_slug;
-                    $tgmplugins['slug']   = $plugin_tags_data->tags[0]->premium_slug;
-                    $tgmplugins['source'] = $destination;
+                        $new_file_content = file_get_contents($zip, 0, $stream);
+                        $destination_path = trailingslashit( wp_upload_dir()['basedir'] ) . 'tkwps/';
+                        $destination      = $destination_path.$plugin_tags_data->tags[0]->premium_slug .".zip";
+                        $file             = fopen($destination, "w");
+                        fputs($file, $new_file_content);
+                        fclose($file);
+                       
+                        $tgmplugins           = array();
+                        $tgmplugins['name']   = $plugin_tags_data->tags[0]->premium_slug;
+                        $tgmplugins['slug']   = $plugin_tags_data->tags[0]->premium_slug;
+                        $tgmplugins['source'] = $destination;
+                    }                    
                     
                     $tgmpluginsFinal[] = $tgmplugins;
-                }                
+                }               
                 
                 update_option('wgt_plugin_name', $tgmpluginsFinal);
                 
@@ -528,6 +584,38 @@ window.setTimeout(function(){
     /**
      * Get the settings option array and print one of its values
      */
+
+     public function tk_solution_callback()
+    {
+        
+       
+        echo '<select id="tk-select-solution">';
+        
+                $url='https://themekraft.com/tk-solutions.json';
+                $ch = curl_init();
+                $timeout = 10;
+                curl_setopt( $ch, CURLOPT_URL, $url );
+                curl_setopt( $ch, CURLOPT_RETURNTRANSFER, 1 );
+                curl_setopt( $ch, CURLOPT_CONNECTTIMEOUT, $timeout );
+                $data = curl_exec( $ch );
+                $response_info = curl_getinfo( $ch );
+                curl_close( $ch );
+                if ( isset( $response_info['http_code'] ) && $response_info['http_code'] === 200 ) {
+                    $solutions = json_decode( $data, true );
+                    echo '<option value=" ">Please select</option>';
+                    foreach( $solutions as $solution ){
+                        $s_name = $solution['metadata']['freemius_name'][0];
+                        $s_id = $solution['metadata']['freemius_plugin_id'][0];
+                        $s_link = $solution['metadata']['freemius_bundle'][0];
+                        echo '<option data-bundle-id="' . $s_id . '" data-bundle-url="' . $s_link . '" value="' . str_replace( ' ', '-', strtolower( $s_name ) ) . '"> '. $s_name .'</option>';
+                    }
+                }
+        
+        echo '</select>';
+        
+        
+    }
+
     public function license_number_callback()
     {
         
@@ -535,7 +623,7 @@ window.setTimeout(function(){
             '<input type="text" id="license_number" name="my_option_name[license_number]" value="%s" />',
             isset( $this->options['license_number'] ) ? esc_attr( $this->options['license_number']) : ''
         );
-        
+        echo '<div class="buy-text"><p><b>Not Purchased Yet?</b> Get a new license of this Solution here:<a class="bundle-link" href="#" target="blank"></a></p></div>';
     }
 
     /**
@@ -589,41 +677,64 @@ function my_wizzard_ajax() {
     foreach ($plugins as $key => $value) 
     {
        
-        $plugin_tags_data = $api->Api("/plugins/{$key}/tags.json");
-        $plugin_tag_id = $plugin_tags_data->tags[0]->id;
+        $plugin_tags_data   = $api->Api("/plugins/{$key}/tags.json");
+        $plugin_tag_id      = $plugin_tags_data->tags[0]->id;
+        $plugin_has_premium = $plugin_tags_data->tags[0]->has_premium;
+        $tkplugin_id        = $plugin_tags_data->tags[0]->plugin_id; 
 
-        $zip = $api->GetSignedUrl('plugins/'.$key.'/tags/'.$plugin_tag_id.'.zip?is_premium=true');
+        if( !empty($plugin_tag_id) && empty($plugin_has_premium) )
+        {
+            $zip = $api->GetSignedUrl('plugins/'.$key.'/tags/'.$plugin_tag_id.'.zip?is_premium=false');
+            
+            $plugin_info = $api->Api("/plugins/{$tkplugin_id}.json");
 
+            $stream = stream_context_create(array( 
+            "ssl"=>array(     
+            "verify_peer"=> false,     
+            "verify_peer_name"=> false, ),
+            'http' => array(     
+            'timeout' => 30     ) )     );
+
+            $new_file_content = file_get_contents($zip, 0, $stream);
+            $destination_path = trailingslashit( wp_upload_dir()['basedir'] ) . 'tkwps/';
+            $destination      = $destination_path.$plugin_info->slug .".zip";
+            $file             = fopen($destination, "w");
+            fputs($file, $new_file_content);
+            fclose($file);
            
-        $stream = stream_context_create(array( 
-        "ssl"=>array(     
-        "verify_peer"=> false,     
-        "verify_peer_name"=> false, ),
-        'http' => array(     
-        'timeout' => 30     ) )     );
+            $tgmplugins           = array();
+            $tgmplugins['name']   = $plugin_info->slug;
+            $tgmplugins['slug']   = $plugin_info->slug;
+            $tgmplugins['source'] = $destination;
+        }
+        else
+        {
+            $zip = $api->GetSignedUrl('plugins/'.$key.'/tags/'.$plugin_tag_id.'.zip?is_premium=true');
+           
+            $stream = stream_context_create(array( 
+            "ssl"=>array(     
+            "verify_peer"=> false,     
+            "verify_peer_name"=> false, ),
+            'http' => array(     
+            'timeout' => 30     ) )     );
 
-        $new_file_content = file_get_contents($zip, 0, $stream);
-        $destination_path = trailingslashit( wp_upload_dir()['basedir'] ) . 'tkwps/';
-        $destination      = $destination_path.$plugin_tags_data->tags[0]->premium_slug .".zip";
-        $file             = fopen($destination, "w");
-        fputs($file, $new_file_content);
-        fclose($file);
-       
-        $tgmplugins           = array();
-        $tgmplugins['name']   = $plugin_tags_data->tags[0]->premium_slug;
-        $tgmplugins['slug']   = $plugin_tags_data->tags[0]->premium_slug;
-        $tgmplugins['source'] = $destination;
+            $new_file_content = file_get_contents($zip, 0, $stream);
+            $destination_path = trailingslashit( wp_upload_dir()['basedir'] ) . 'tkwps/';
+            $destination      = $destination_path.$plugin_tags_data->tags[0]->premium_slug .".zip";
+            $file             = fopen($destination, "w");
+            fputs($file, $new_file_content);
+            fclose($file);
+           
+            $tgmplugins           = array();
+            $tgmplugins['name']   = $plugin_tags_data->tags[0]->premium_slug;
+            $tgmplugins['slug']   = $plugin_tags_data->tags[0]->premium_slug;
+            $tgmplugins['source'] = $destination;
+        }                    
         
         $tgmpluginsFinal[] = $tgmplugins;
-    }    
+    }     
     
     update_option('wgt_plugin_name', $tgmpluginsFinal);
-
-    $wc_license_options = array(
-    'license_number' => 'dgdfgfdg',
-    'bundle_id' => 'wewewewewe'
-    );
-    update_option('my_option_name', $wc_license_options);
 
     $return = array(
         'message' => __( 'Success')
