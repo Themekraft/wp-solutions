@@ -38,21 +38,20 @@ require_once dirname(__FILE__) . '/freemius-php-sdk-master/freemius/Freemius.php
 
 require_once dirname(__FILE__) . '/example.php';
 
-add_action('admin_init', 'tkwps_redirect');
+add_action( 'admin_init', 'tkwps_redirect' );
 
 function tkwps_redirect() {
-     if (get_option('tkwps_do_activation_redirect', false)) {
-         delete_option('tkwps_do_activation_redirect');
-         wp_redirect( admin_url( '/options-general.php?page=my-setting-admin' ) );
+     if (get_option( 'tkwps_do_activation_redirect', false ) ) {
+        delete_option( 'tkwps_do_activation_redirect' );
+        wp_redirect( admin_url( '/options-general.php?page=tk-solutions-setting-admin' ) );
      }
  }
 
-if ( !class_exists( 'TKWPS' ) ) {
+if ( ! class_exists( 'TKWPS' ) ) {
     /**
      * Class TKWPS
      */
-    class TKWPS
-    {
+    class TKWPS {
         /**
          * @var string
          */
@@ -64,23 +63,15 @@ if ( !class_exists( 'TKWPS' ) ) {
          * @package TKWPS
          * @since 0.1
          */
-        public function __construct()
-        {
+        public function __construct() {
+
             global  $wp_session ;
-
             register_activation_hook( __FILE__, array( $this, 'plugin_activation' ) );
-
             $this->load_constants();
-            add_action(
-                'init',
-                array( $this, 'init_hook' ),
-                1,
-                1
-            );
-
+            add_action( 'init', array( $this, 'init_hook' ), 1, 1 );
             require_once TKWPS_INCLUDES_PATH . 'solution-settings-page.php';
-
             register_deactivation_hook( __FILE__, array( $this, 'plugin_deactivation' ) );
+
         }
 
         /**
@@ -91,8 +82,7 @@ if ( !class_exists( 'TKWPS' ) ) {
          * @package TKWPS
          * @since 0.1
          */
-        public function load_constants()
-        {
+        public function load_constants() {
             /**
              * Define the plugin version
              */
@@ -151,8 +141,7 @@ if ( !class_exists( 'TKWPS' ) ) {
          * @package TKWPS
          * @since 0.1-beta
          */
-        public function init_hook()
-        {
+        public function init_hook() {
 
             do_action( 'TKWPS_init' );
 
@@ -162,21 +151,20 @@ if ( !class_exists( 'TKWPS' ) ) {
          * Plugin activation
          * @since  0.1
          */
-        function plugin_activation()
-        {
-          //exit( wp_redirect( admin_url( '/options-general.php?page=my-setting-admin' ) ) );
-          $uploads_dir = trailingslashit( wp_upload_dir()['basedir'] ) . 'tkwps';
-          wp_mkdir_p( $uploads_dir );
-          add_option('tkwps_do_activation_redirect', true);
+        function plugin_activation() {
+
+            $uploads_dir = trailingslashit( wp_upload_dir()['basedir'] ) . 'tkwps';
+            wp_mkdir_p( $uploads_dir );
+            add_option('tkwps_do_activation_redirect', true);
+
         }
 
          /**
          * Plugin deactivation
          * @since  0.1
          */
-        function plugin_deactivation()
-        {
-          //exit( wp_redirect( admin_url( '/options-general.php?page=my-setting-admin' ) ) );
+        function plugin_deactivation() {
+          //exit( wp_redirect( admin_url( '/options-general.php?page=tk-solutions-setting-admin' ) ) );
 
           //add_option('tkwps_do_activation_redirect', true);
         }
@@ -184,9 +172,7 @@ if ( !class_exists( 'TKWPS' ) ) {
     }
 }
 
-function activate_tkwps_at_plugin_loader()
-{
-    // tkwps requires php version 5.3 or higher.
+function activate_tkwps_at_plugin_loader() {
 
     if ( PHP_VERSION < 5.3 ) {
         add_action( 'admin_notices', 'tkwps_php_version_admin_notice' );

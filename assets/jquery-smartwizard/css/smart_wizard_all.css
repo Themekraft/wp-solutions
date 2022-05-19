@@ -139,9 +139,9 @@
 }
 
 /* SmartWizard Theme: Default */
-.sw-theme-default {
+/* .sw-theme-default {
   border: 1px solid #eeeeee;
-}
+} */
 
 .sw-theme-default > .tab-content > .tab-pane {
   padding: 10px;
@@ -157,7 +157,7 @@
 }
 
 .sw-theme-default > .nav {
-  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.1) !important;
+  box-shadow: 0 0.125rem 0.25rem rgba(189, 211, 41, 0.2) !important;
 }
 
 .sw-theme-default > .nav .nav-link {
@@ -183,12 +183,12 @@
 }
 
 .sw-theme-default > .nav .nav-link.active {
-  color: #17a2b8 !important;
+  color: #811e8ed3 !important;
   cursor: pointer;
 }
 
 .sw-theme-default > .nav .nav-link.active::after {
-  background: #17a2b8 !important;
+  background: #801e8e5e !important;
   width: 100%;
 }
 
@@ -673,3 +673,86 @@ tr.license-row
 {
     display: none;
 }
+
+#TB_window{
+  border-radius: 20px 20px 20px 20px;
+  box-shadow: 0 3px 6px rgba(189, 211, 41, 0.45) !important;
+}
+
+div#TB_title{
+  border: 0px;
+}
+
+#select-solution, input#wiz_license_number{
+  border:0px;
+  border-bottom: 2px solid #bbd222;
+}
+
+span.tb-close-icon::before{
+  color: #bdd329;
+}
+
+div#TB_ajaxContent{
+  background: #f0f0f1;
+  background-image: url('../../img/create.png'), linear-gradient(0deg, rgba(217,218,213,0.6) 15%, rgba(217,218,213,0.3) 25%, rgba(255,255,255,1) 90%, rgba(255,255,255,1) 100%);
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+input#wiz_license_number:focus, select#select-solution:focus{
+  box-shadow: none !important;
+  background: #bdd3290f;
+}
+
+input#validate{
+  width: 100%;
+  background-color: #bdd329;
+  color: #ffffff;
+  font-weight: bold;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  letter-spacing: 2px;
+}
+
+a.bundle-link{
+  color: #811e8ed3;
+}
+
+.Plugin-data h2, #step-3 h2{
+  color: #bbd222;
+}
+
+#step-2 li{
+  background-image: url('../../img/check-box-g46d628004_640.png');
+  background-repeat: no-repeat;
+  background-position: left center;
+  background-size: 15px;
+  padding-left: 20px;
+}
+
+#step-2 #go-step-one, #step-2 #install-activate, #go-step-two{
+  width: 49%;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  font-weight: bold;
+  letter-spacing: 2px;
+}
+
+#step-2 #go-step-one{
+  background-color: #bdd42a57;
+  color: #000;
+}
+
+#step-2 #install-activate, #go-step-two{
+  background-color: #bdd42a;
+  color: #ffffff;
+}
+
+.plugin-success{
+  margin-bottom: 20px;
+}
+
+#go-step-two{
+  width: 100%;
+}
+
