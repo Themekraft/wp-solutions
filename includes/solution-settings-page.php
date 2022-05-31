@@ -285,21 +285,21 @@ window.setTimeout(function(){
          <div id="step-3" class="tab-pane" role="tabpanel">
             <h2>Well done!</h2>
             <?php 
-                $test = get_option('wgt_plugin_id');
+                $current_id = get_option('wgt_plugin_id');
                 $data = $this->get_bundle_data();
                 if( ! empty( $data ) ){
                     $solutions = json_decode( $data, true );
                     foreach( $solutions as $solution ){
-                        if( $test == $solution['metadata']['freemius_plugin_id'][0] ){
-                            echo '<p>Check the following link for more information: <a href="' . $solution['metadata']['documentation'][0] . '">See More</a></p>';
-                            echo '<p>Or visit our <a href="' . $solution['metadata']['documentation_youtube'][0] . '">Youtube</a> channel.</p>';
+                        if( $current_id == $solution['metadata']['freemius_plugin_id'][0] ){
+                            echo '<p>Check the following link for more information: <a href="' . $solution['metadata']['documentation'][0] . '" target="_blank">See More</a></p>';
+                            echo '<p>Or visit our <a href="' . $solution['metadata']['documentation_youtube'][0] . '" target="_blank">Youtube</a> channel.</p>';
                             break;
                         }
                     }
                 }
                 
             ?>
-            <input type="button" id="go-step-two" value="Back">
+            <!-- <input type="button" id="TB_closeWindowButton" value="Close"> -->
             <!-- <input type="button" id="go-step-four" value="Next"> -->
          </div>
 
@@ -596,7 +596,6 @@ window.setTimeout(function(){
     }
 
     public function get_bundle_data(){
-        $test = dirname( plugin_dir_url( __FILE__ ) ) . '/assets/img/tk_solutions_logo.png';
         $url='https://themekraft.com/tk-solutions.json';
         $ch = curl_init();
         $timeout = 10;

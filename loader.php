@@ -125,9 +125,9 @@ if ( ! class_exists( 'TKWPS' ) ) {
             }
 
             define( 'FS__API_SCOPE', 'developer' );
-            define( 'FS__API_DEV_ID', 13700 );
-            define( 'FS__API_PUBLIC_KEY', 'pk_d6125cf2086c92d8c3e0f027b1cb8' );
-            define( 'FS__API_SECRET_KEY', 'sk_QfJceV^#Z+VlW)dEY]09oqtr<{x%X' );
+            define( 'FS__API_DEV_ID', 342 );
+            define( 'FS__API_PUBLIC_KEY', 'pk_5c0a99a61968f0e6fb135f985732f' );
+            define( 'FS__API_SECRET_KEY', 'sk_^gR{[D6i2cKo2F4o[SO)k$_69.Z4v' );
 
         }
 
