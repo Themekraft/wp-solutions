@@ -666,12 +666,18 @@
 
 .solution-key{
   display: none;
+  text-align: center;
 }
 
 tr.bundle-row,
 tr.license-row 
 {
     display: none;
+}
+
+div#TB_overlay{
+  background: #373737;
+  opacity: 0.98 !important;
 }
 
 #TB_window{
@@ -686,6 +692,12 @@ div#TB_title{
 #select-solution, input#wiz_license_number{
   border:0px;
   border-bottom: 2px solid #bbd222;
+  width: 350px;
+  text-align: center;
+}
+
+input#wiz_license_number{
+  width: 80%;
 }
 
 span.tb-close-icon::before{
@@ -756,3 +768,6 @@ a.bundle-link{
   width: 100%;
 }
 
+div.buy-info{
+  margin-top: 50px;
+}
